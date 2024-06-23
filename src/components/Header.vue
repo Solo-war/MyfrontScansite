@@ -1,25 +1,27 @@
 <template>
-  <div>
-    <header class="header">
-      <ul class="">
-        <li>Главная</li>
-      </ul>
-    </header>
-  </div>
+  <header class="header">
+    <h1>Сканирование документов</h1>
+  </header>
 </template>
+
+
 <script>
 export default { name: "Main-Header" };
 </script>
 
 <style scoped>
-
-
 .header {
-  display: flex;
-  width: 100px;
-  height: 30px;
-  justify-content: center;
+  margin-bottom: 10px;
+  background-color: white;
+  padding: 20px;
+  text-align: center;
 
-  margin-bottom: 15%;
+  color: black;
+}
+
+h1 {
+  font-weight: 600;
+  font-family: sans-serif;
+  font-size: 32px;
 }
 </style>

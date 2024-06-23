@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="exportToExcel">Экспорт в Excel</button>
+
   </div>
 </template>
 
@@ -79,6 +79,7 @@ button {
   color: #fff ;
   border: 3px solid #6543;
   border-radius: 10px;
+
   
 }
 </style>
