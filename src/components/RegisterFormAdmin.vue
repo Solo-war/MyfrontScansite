@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div class="register-form">
-      <img class="logo" src="../assets/logo.png" alt="Error" />
- 
-      <form @submit.prevent="register" class="form-group">
+    <div v-if="!isLoggedIn" class="register-form">
+      <img class="logo" src="../assets/logo.png" alt="Logo" />
+
+      <form @submit.prevent="sendRequest" class="form-group">
         <div class="form-el">
           <label for="login">Логин:</label>
           <input v-model="login" type="text" id="login" required />
@@ -18,7 +18,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
 
@@ -27,31 +26,44 @@ export default {
     return {
       login: "",
       password: "",
+      isLoggedIn: false,
+      message: ""
     };
   },
   methods: {
-    async register() {
-      try {
-        const response = await axios.post("http://localhost:5000/login", {
-          login: this.login,
-          password: this.password,
-        });
+    async sendRequest() {
+      const options = {
+        method: 'POST',
+        url: 'http://localhost:3000/root/login',
+        headers: {
+          cookie: 'root-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpcCI6Ijo6ZmZmZjoxNzIuMTguMC4xIiwiaWF0IjoxNzE5MzM2NjUyLCJleHAiOjE3MTk0MjMwNTJ9.S6jV4aYQG7LHbGybxggwmWMLgMnprv2qANirt2PWIqk',
+          'Content-Type': 'application/json',
+          'User-Agent': 'insomnia/9.2.0'
+        },
+        data: { login: this.login, password: this.password }
+      };
 
-        if (response.status === 200 && this.login === "root" && this.password === "123") {
-          // Вызываем событие authenticated при успешной аутентификации
-          this.$emit("authenticated", true); 
-          alert("Вы вошли как администратор");
+      try {
+        const response = await axios(options);
+        console.log('Response:', response.data);
+
+        if (response.data.message === 'Logged in successfully') {
+          this.isLoggedIn = true;
+          this.message = response.data.message;
+          this.$emit('login-success'); // Вызываем событие для передачи успешного входа в родительский компонент
         } else {
-          alert("Неверный логин или пароль");
+          console.log('Authentication failed');
+          // Дополнительная логика для обработки неуспешной аутентификации
         }
       } catch (error) {
-        console.error(error);
-        alert("Произошла ошибка при входе");
+        console.error('Error:', error);
+        // Добавьте здесь логику для обработки ошибки
       }
-    },
-  },
+    }
+  }
 };
 </script>
+
 
 <style scoped>
 .logo {

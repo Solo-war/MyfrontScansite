@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>{{ message }}</h1>
-    <button @click="fetchUsers">Fetch Users</button>
+
     <ul>
       <li v-for="user in users" :key="user._id">{{ user.firstName }} {{ user.lastName }}</li>
     </ul>
@@ -31,14 +31,6 @@ export default {
         this.message = response.data.message;
       } catch (error) {
         console.error('Login error:', error);
-      }
-    },
-    async fetchUsers() {
-      try {
-        const response = await axios.get('/api/root/users');
-        this.users = response.data;
-      } catch (error) {
-        console.error('Error fetching users:', error);
       }
     },
   },

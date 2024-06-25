@@ -1,7 +1,9 @@
 <template>
   <div id="app">
-    <ApiComponent />
+    <RegisterFormAdmin v-if="!isAdminAuthenticated" @login-success="handleLoginSuccess" />
+    <ApiComponent v-if="isAdminAuthenticated" />
     <Header v-if="isAdminAuthenticated" />
+
     <InfoCard
       :responses="responses"
       @fileChange="onFileChange"
@@ -67,16 +69,19 @@
           class="document-image"
           :class="response.type"
         />
-        <button @click="deleteResponse(index)">Удалить</button> <!-- Кнопка для удаления данных -->
+        <button @click="deleteResponse(index)">Удалить</button>
+        <!-- Кнопка для удаления данных -->
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 import ApiComponent from "./components/ApiComponent.vue";
 import Header from "./components/Header.vue";
 import InfoCard from "./components/InfoCard.vue";
+import RegisterFormAdmin from "./components/RegisterFormAdmin.vue";
 
 export default {
   name: "App",
@@ -84,12 +89,13 @@ export default {
     ApiComponent,
     Header,
     InfoCard,
+    RegisterFormAdmin
   },
   data() {
     return {
       responses: [],
       uploadingFiles: [],
-      isAdminAuthenticated: true,
+      isAdminAuthenticated: false,
       nameSource: "passport",
       passportFields: {
         ФИО: "name",
@@ -156,9 +162,44 @@ export default {
     deleteResponse(index) {
       this.responses.splice(index, 1);
     },
-  },
+    handleLoginSuccess() {
+      this.isAdminAuthenticated = true;
+    },
+    async sendRequest() {
+      const options = {
+        method: 'POST',
+        url: 'http://localhost:3000/root/login',
+        headers: {
+          cookie: 'root-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpcCI6Ijo6ZmZmZjoxNzIuMTguMC4xIiwiaWF0IjoxNzE5MzM2NjUyLCJleHAiOjE3MTk0MjMwNTJ9.S6jV4aYQG7LHbGybxggwmWMLgMnprv2qANirt2PWIqk',
+          'Content-Type': 'application/json',
+          'User-Agent': 'insomnia/9.2.0'
+        },
+        data: { login: this.login, password: this.password }
+      };
+
+      try {
+        const response = await axios(options);
+        console.log('Response:', response.data);
+
+        if (response.data.message === 'Logged in successfully') {
+          this.isAdminAuthenticated = true;
+        } else {
+          console.log('Authentication failed');
+          // Дополнительная логика для обработки неуспешной аутентификации
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        // Добавьте здесь логику для обработки ошибки
+      }
+    }
+  }
 };
 </script>
+
+<style>
+/* Ваши стили остаются без изменений */
+</style>
+
 
 <style>
 * {
@@ -190,7 +231,6 @@ export default {
 
 .upload-card-image {
   text-align: left;
-  
 }
 
 .card {
