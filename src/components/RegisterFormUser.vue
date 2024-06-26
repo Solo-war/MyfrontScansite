@@ -13,7 +13,7 @@
           <input v-model="password" type="password" id="password" required />
         </div>
         <button type="submit">Войти</button>
-        <div class="insert"><p class="insertUser">Вход для User</p></div>
+        <div class="insert"><p class="insertUser" @click="$emit('switch-form')">Вход для Admin</p></div>
       </form>
     </div>
   </div>
@@ -32,18 +32,16 @@ export default {
   methods: {
     async register() {
       try {
-        const response = await axios.post("http://localhost:5000/login", {
+        const response = await axios.post("http://localhost:3000/user/login", {
           login: this.login,
           password: this.password,
         });
 
         if (
-          response.status === 200 &&
-          this.login === "root" &&
-          this.password === "123"
+          response.status === 200
         ) {
-          this.$emit("authenticated"); // Вызываем событие authenticated при успешной аутентификации
-          alert("Вы вошли как администратор");
+          this.$emit("authenticated");
+          alert("Вы вошли как Пользователь");
         } else {
           alert("Неверный логин или пароль");
         }
@@ -55,6 +53,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .logo {

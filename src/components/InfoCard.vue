@@ -30,13 +30,15 @@ export default {
     };
   },
   methods: {
+
+
+
     onFileChange(e) {
       this.$emit('fileChange', e);
     },
     exportToExcel() {
       const data = [];
 
-      // Collect all responses and group them by unique ID (assuming ID exists and is unique per person)
       const responseMap = new Map();
       this.responses.forEach(response => {
         if (!responseMap.has(response.id)) {
@@ -46,11 +48,9 @@ export default {
         personData[response.type] = response;
       });
 
-      // Iterate over the responseMap to create rows for each person
       responseMap.forEach(personData => {
         let fullName = '';
 
-        // Determine the full name based on the selected source
         if (this.nameSource === 'passport' && personData.passport) {
           fullName = personData.passport.name || '';
         } else if (this.nameSource === 'driver_license' && personData.driver_license) {
@@ -77,15 +77,18 @@ export default {
         data.push(rowData);
       });
 
-      // Export to Excel
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data);
       XLSX.utils.book_append_sheet(wb, ws, 'Документы');
       XLSX.writeFile(wb, 'документы.xlsx');
+          console.log('Загруженные ответы:', this.responses)
     },
+
   },
 };
 </script>
+
+
 
 <style scoped>
 

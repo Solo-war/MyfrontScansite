@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <!-- <div>
     <h1>{{ message }}</h1>
 
     <ul>
@@ -7,34 +7,34 @@
         {{ user.firstName }} {{ user.lastName }}
       </li>
     </ul>
-  </div>
+  </div> -->
 </template>
 
 <script>
-import axios from "axios";
+// import axios from "axios";
 
-export default {
-  data() {
-    return {
-      message: "",
-      users: [],
-    };
-  },
-  created() {
-    this.login();
-  },
-  methods: {
-    async login() {
-      try {
-        const response = await axios.post("/api/root/login", {
-          login: "root",
-          password: "123",
-        });
-        this.message = response.data.message;
-      } catch (error) {
-        console.error("Login error:", error);
-      }
-    },
-  },
-};
+// export default {
+//   data() {
+//     return {
+//       message: "",
+//       users: [],
+//     };
+//   },
+//   created() {
+//     this.login();
+//   },
+//   methods: {
+//     async login() {
+//       try {
+//         const response = await axios.post("/api/root/login", {
+//           login: "root",
+//           password: "123",
+//         });
+//         this.message = response.data.message;
+//       } catch (error) {
+//         console.error("Login error:", error);
+//       }
+//     },
+//   },
+// };
 </script>

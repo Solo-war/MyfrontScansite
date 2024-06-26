@@ -1,102 +1,69 @@
 <template>
   <div id="app">
-    <RegisterFormUser v-if="!isAdminAuthenticated" @login-success="handleLoginSuccess" />
-    <ApiComponent v-if="isAdminAuthenticated" />
-    <Header v-if="isAdminAuthenticated" />
+    <RegisterSwitch v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
+    <Header v-if="isAuthenticated" />
 
-    <InfoCard
-      :responses="responses"
-      @fileChange="onFileChange"
-      v-if="isAdminAuthenticated"
-    />
-    <div
-      v-if="uploadingFiles.length && isAdminAuthenticated"
-      class="full-upload-card"
-    >
-      <div
-        v-for="(file, index) in uploadingFiles"
-        :key="index"
-        class="upload-card"
-      >
-        <p class="">{{ file.name }}</p>
+    <InfoCard :responses="responses" @fileChange="onFileChange" @newResponses="addResponses" v-if="isAuthenticated" />
+    
+    <div v-if="uploadingFiles.length && isAuthenticated" class="full-upload-card">
+      <div v-for="(file, index) in uploadingFiles" :key="index" class="upload-card">
+        <p>{{ file.name }}</p>
         <p class="upload-card-load">{{ file.status }}</p>
       </div>
     </div>
-    <div v-if="responses.length > 0 && isAdminAuthenticated" class="card">
-      <div
-        v-for="(response, index) in responses"
-        :key="index"
-        class="response-card"
-      >
+
+    <div v-if="responses.length > 0 && isAuthenticated" class="card">
+      <div v-for="(response, index) in responses" :key="index" class="response-card">
         <div class="document-info">
           <h2>Тип документа: {{ response.type }}</h2>
           <table>
             <tbody v-if="response.type === 'passport'">
               <tr v-for="(value, key) in passportFields" :key="key">
-                <td class="documentField">
-                  <strong>{{ key }}:</strong>
-                </td>
+                <td class="documentField"><strong>{{ key }}:</strong></td>
                 <td>
-                  <textarea
-                    v-if="key === 'Кем выдан'"
-                    v-model="response[value]"
-                    class="documentValue"
-                    rows="1"
-                  ></textarea>
-                  <input
-                    v-else
-                    v-model="response[value]"
-                    class="documentValue"
-                  />
+                  <textarea v-if="key === 'Кем выдан'" v-model="response[value]" class="documentValue" rows="1"></textarea>
+                  <input v-else v-model="response[value]" class="documentValue" />
                 </td>
               </tr>
             </tbody>
             <tbody v-if="response.type === 'driver_license'">
               <tr v-for="(value, key) in driverLicenseFields" :key="key">
-                <td class="documentField">
-                  <strong>{{ key }}:</strong>
-                </td>
-                <td>
-                  <input v-model="response[value]" class="documentValue" />
-                </td>
+                <td class="documentField"><strong>{{ key }}:</strong></td>
+                <td><input v-model="response[value]" class="documentValue" /></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <img
-          :src="'data:image/jpeg;base64,' + response.image"
-          alt="Документ"
-          class="document-image"
-          :class="response.type"
-        />
-        <button @click="deleteResponse(index)">Удалить</button>
-        <!-- Кнопка для удаления данных -->
+        <template v-if="response.image">
+          <img :src="'data:image/jpeg;base64,' + response.image" alt="Документ" class="document-image" :class="response.type"  @click="downloadImage(response)" />
+        </template>
+        <template v-else>
+          <p>Изображение не загружено</p>
+        </template>
+        <button @click="deleteResponse(index)" class="trash">❌</button>
+        
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import ApiComponent from "./components/ApiComponent.vue";
 import Header from "./components/Header.vue";
 import InfoCard from "./components/InfoCard.vue";
-import RegisterFormUser from "./components/RegisterFormUser.vue";
+import RegisterSwitch from "./components/RegisterSwitch.vue";
 
 export default {
   name: "App",
   components: {
-    ApiComponent,
     Header,
     InfoCard,
-    RegisterFormUser
+    RegisterSwitch,
   },
   data() {
     return {
       responses: [],
       uploadingFiles: [],
-      isAdminAuthenticated: false,
-      nameSource: "passport",
+      isAuthenticated: false,
       passportFields: {
         ФИО: "name",
         Пол: "gender",
@@ -118,8 +85,28 @@ export default {
     };
   },
   methods: {
+        downloadImage(response) {
+      const imageData = response.image;
+      if (!imageData) {
+        alert("Изображение отсутствует");
+        return;
+      }
+
+      // Создаем временную ссылку для скачивания
+      const link = document.createElement("a");
+      if (response.type === "driver_license") {
+        link.download = response["driver-license-1"] + response["driver-license-2"] + ".jpg";
+      }
+      if (response.type === "passport") {
+        link.download = response.name + ".jpg"; 
+      }
+      link.href = "data:image/jpeg;base64," + imageData;
+
+      link.click();
+    },
+
     async onFileChange(e) {
-      if (!this.isAdminAuthenticated) {
+      if (!this.isAuthenticated) {
         return;
       }
 
@@ -136,6 +123,13 @@ export default {
 
         try {
           const apiUrl = import.meta.env.VITE_API_URL;
+
+          if (!apiUrl) {
+            throw new Error("API URL не задан. Проверьте настройки.");
+          }
+
+          console.log("Отправка запроса на URL:", apiUrl);
+
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
@@ -145,60 +139,36 @@ export default {
           });
 
           if (!response.ok) {
-            throw new Error("Ошибка HTTP: " + response.status);
+            throw new Error(`Ошибка HTTP: ${response.status}`);
           }
 
           const data = await response.json();
           newResponses.push(...data);
+          this.uploadingFiles[i].status = "Загружено";
         } catch (error) {
-          console.error("Ошибка:", error);
+          console.error(`Ошибка при загрузке файла: ${files[i].name}`, error);
+          this.uploadingFiles[i].status = `Ошибка: ${error.message}`;
         }
-
-        this.uploadingFiles[i].status = "Загружено";
       }
 
-      this.responses.push(...newResponses);
+      this.addResponses(newResponses);
     },
+addResponses(newResponses) {
+  console.log('Новые ответы:', newResponses);
+
+  this.responses.push(...newResponses);
+  this.uploadingFiles.forEach(file => file.status = "Загружено");
+},
     deleteResponse(index) {
       this.responses.splice(index, 1);
     },
-    handleLoginSuccess() {
-      this.isAdminAuthenticated = true;
+    handleLoginSuccess(user) {
+      this.isAuthenticated = true;
+      this.isRootUser = user.login === 'root';
     },
-    async sendRequest() {
-      const options = {
-        method: 'POST',
-        url: 'http://localhost:3000/root/login',
-        headers: {
-          cookie: 'root-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpcCI6Ijo6ZmZmZjoxNzIuMTguMC4xIiwiaWF0IjoxNzE5MzM2NjUyLCJleHAiOjE3MTk0MjMwNTJ9.S6jV4aYQG7LHbGybxggwmWMLgMnprv2qANirt2PWIqk',
-          'Content-Type': 'application/json',
-          'User-Agent': 'insomnia/9.2.0'
-        },
-        data: { login: this.login, password: this.password }
-      };
-
-      try {
-        const response = await axios(options);
-        console.log('Response:', response.data);
-
-        if (response.data.message === 'Logged in successfully') {
-          this.isAdminAuthenticated = true;
-        } else {
-          console.log('Authentication failed');
-          // Дополнительная логика для обработки неуспешной аутентификации
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        // Добавьте здесь логику для обработки ошибки
-      }
-    }
-  }
+  },
 };
 </script>
-
-<style>
-/* Ваши стили остаются без изменений */
-</style>
 
 
 <style>
@@ -257,6 +227,36 @@ export default {
   border: 1px solid #000000;
 }
 
+
+
+.upload-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.upload-wrapper img {
+  display: block;
+}
+
+.upload-wrapper::after {
+  content: "Скачать";
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none; /* Prevents interaction with the pseudo-element */
+}
+
+.upload-wrapper:hover::after {
+  opacity: 1;
+}
+
 .document-info {
   width: 60%;
   text-align: left;
@@ -309,6 +309,16 @@ button {
 }
 
 button:hover {
-  background-color: black;
+  background-color: #333;
 }
+
+
+.trash {
+  position: relative;
+  right: 10px;
+  font-size: 16px;
+  width: 20px;
+  background-color: rgba(0, 0, 0, 0);
+}
+
 </style>
