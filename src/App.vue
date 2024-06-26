@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <RegisterFormAdmin v-if="!isAdminAuthenticated" @login-success="handleLoginSuccess" />
+    <RegisterFormUser v-if="!isAdminAuthenticated" @login-success="handleLoginSuccess" />
     <ApiComponent v-if="isAdminAuthenticated" />
     <Header v-if="isAdminAuthenticated" />
 
@@ -81,7 +81,7 @@ import axios from "axios";
 import ApiComponent from "./components/ApiComponent.vue";
 import Header from "./components/Header.vue";
 import InfoCard from "./components/InfoCard.vue";
-import RegisterFormAdmin from "./components/RegisterFormAdmin.vue";
+import RegisterFormUser from "./components/RegisterFormUser.vue";
 
 export default {
   name: "App",
@@ -89,7 +89,7 @@ export default {
     ApiComponent,
     Header,
     InfoCard,
-    RegisterFormAdmin
+    RegisterFormUser
   },
   data() {
     return {
