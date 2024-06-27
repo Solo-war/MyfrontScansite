@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <AdminPanel
+    <adminPanel
       v-if="isAuthenticated && isRootUser"
       :isAuthenticated="isAuthenticated"
       :isRootUser="isRootUser"
@@ -103,7 +103,7 @@ export default {
   components: {
     Header,
     InfoCard,
-    AdminPanel,
+    adminPanel,
     RegisterSwitch,
   },
   data() {
