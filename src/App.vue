@@ -187,6 +187,7 @@ export default {
             headers: {
               accept: "application/json",
             },
+            withCredentials: true,
             body: formData,
           });
 
