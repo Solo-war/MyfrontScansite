@@ -13,7 +13,9 @@
           <input v-model="password" type="password" id="password" required />
         </div>
         <button type="submit">Войти</button>
-        <div class="insert"><p class="insertUser" @click="$emit('switch-form')">Вход для User</p></div>
+        <div class="insert">
+          <p class="insertUser" @click="$emit('switch-form')">Вход для User </p>
+        </div>
       </form>
     </div>
   </div>
@@ -32,29 +34,42 @@ export default {
   methods: {
     async register() {
       try {
-        const response = await axios.post("http://localhost:3000/root/login", {
-          login: this.login,
-          password: this.password,
-        });
+        console.log(this.login);
+        console.log(this.password);
 
-        if (
-          response.status === 200
-        ) {
-          this.$emit("authenticated");
-          alert("Вы вошли как Пользователь");
-        } else {
-          alert("Неверный логин или пароль");
-        }
+        const options = {
+          method: "POST",
+          url: import.meta.env.VITE_BACKAND_URL + "/root/login",
+          withCredentials: true,
+          headers: {},
+          data: { login: this.login, password: this.password },
+        };
+
+        axios
+          .request(options)
+          .then((response) => {
+            if (response.status === 200) {
+              this.$emit("authenticated", { user: { login: this.login } });
+
+            } else {
+              alert("Неверный логин или пароль");
+            }
+            console.log(response.data);
+          })
+
+/*        .catch((error) => {
+            console.error(error);}
+*/
+
+        
       } catch (error) {
         console.error(error);
         alert("Произошла ошибка при входе");
-      }
+      } 
     },
   },
 };
 </script>
-
-
 
 <style scoped>
 .logo {
@@ -125,10 +140,11 @@ button:hover {
 .insertUser {
   display: inline-block;
   text-align: right;
-  width: 72px;
+  width: 80px;
   color: grey;
   border-bottom: 1px solid grey;
   font-weight: 100;
   font-size: 12px;
+  cursor: pointer;
 }
 </style>

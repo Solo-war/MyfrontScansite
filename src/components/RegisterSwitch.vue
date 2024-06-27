@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="toggleForm">{{ isAdminForm ? 'Вход для User' : 'Вход для Admin' }}</button>
+    
     <RegisterFormAdmin 
       v-if="isAdminForm" 
       @switch-form="toggleForm" 
@@ -32,12 +32,12 @@ export default {
     toggleForm() {
       this.isAdminForm = !this.isAdminForm;
     },
-    handleAdminAuthenticated() {
-      this.$emit('login-success');
+    handleAdminAuthenticated(user) {
+      this.$emit('loginsuccess', user);
     },
-    handleUserAuthenticated() {
+    handleUserAuthenticated(user) {
       // Логика аутентификации для пользователя
-      this.$emit('login-success');
+      this.$emit('loginsuccess', user);
     }
   },
 };

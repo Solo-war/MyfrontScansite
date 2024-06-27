@@ -7,8 +7,8 @@
       </label>
       <button class="exportExcel" @click="exportToExcel">Экспорт в Excel</button>
       <select v-model="nameSource" id="name-source" class="changedocument">
-        <option value="passport">Паспорт</option>
-        <option value="driver_license">Водительское удостоверение</option>
+        <option class="exportExcel-dock"value="passport">Паспорт</option>
+        <option class="exportExcel-dock"value="driver_license">Водительское удостоверение</option>
       </select>
     </div>
   </div>
@@ -152,10 +152,15 @@ export default {
 
 .exportExcel:hover {
   background-color:  #218838;
+
 }
 
+.exportExcel-dock{
+
+}
 
 .changedocument {
+
   border: 3px solid black;
   border-radius: 10px;
 }

@@ -1,47 +1,92 @@
 <template>
   <div id="app">
-    <RegisterSwitch v-if="!isAuthenticated" @login-success="handleLoginSuccess" />
-    <Header v-if="isAuthenticated" />
+    <AdminPanel
+      v-if="isAuthenticated && isRootUser"
+      :isAuthenticated="isAuthenticated"
+      :isRootUser="isRootUser"
+      @logout="handleLogout"
+    />
+    <RegisterSwitch
+      v-if="!isAuthenticated"
+      @loginsuccess="handleLoginSuccess"
+    />
+    <Header v-if="isAuthenticated && !isRootUser" />
 
-    <InfoCard :responses="responses" @fileChange="onFileChange" @newResponses="addResponses" v-if="isAuthenticated" />
-    
-    <div v-if="uploadingFiles.length && isAuthenticated" class="full-upload-card">
-      <div v-for="(file, index) in uploadingFiles" :key="index" class="upload-card">
+    <InfoCard
+      :responses="responses"
+      @fileChange="onFileChange"
+      @newResponses="addResponses"
+      v-if="isAuthenticated && !isRootUser"
+    />
+
+    <div
+      v-if="uploadingFiles.length && isAuthenticated"
+      class="full-upload-card"
+    >
+      <div
+        v-for="(file, index) in uploadingFiles"
+        :key="index"
+        class="upload-card"
+      >
         <p>{{ file.name }}</p>
         <p class="upload-card-load">{{ file.status }}</p>
       </div>
     </div>
 
     <div v-if="responses.length > 0 && isAuthenticated" class="card">
-      <div v-for="(response, index) in responses" :key="index" class="response-card">
+      <div
+        v-for="(response, index) in responses"
+        :key="index"
+        class="response-card"
+      >
         <div class="document-info">
           <h2>Тип документа: {{ response.type }}</h2>
           <table>
             <tbody v-if="response.type === 'passport'">
               <tr v-for="(value, key) in passportFields" :key="key">
-                <td class="documentField"><strong>{{ key }}:</strong></td>
+                <td class="documentField">
+                  <strong>{{ key }}:</strong>
+                </td>
                 <td>
-                  <textarea v-if="key === 'Кем выдан'" v-model="response[value]" class="documentValue" rows="1"></textarea>
-                  <input v-else v-model="response[value]" class="documentValue" />
+                  <textarea
+                    v-if="key === 'Кем выдан'"
+                    v-model="response[value]"
+                    class="documentValue"
+                    rows="1"
+                  ></textarea>
+                  <input
+                    v-else
+                    v-model="response[value]"
+                    class="documentValue"
+                  />
                 </td>
               </tr>
             </tbody>
             <tbody v-if="response.type === 'driver_license'">
               <tr v-for="(value, key) in driverLicenseFields" :key="key">
-                <td class="documentField"><strong>{{ key }}:</strong></td>
-                <td><input v-model="response[value]" class="documentValue" /></td>
+                <td class="documentField">
+                  <strong>{{ key }}:</strong>
+                </td>
+                <td>
+                  <input v-model="response[value]" class="documentValue" />
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <template v-if="response.image">
-          <img :src="'data:image/jpeg;base64,' + response.image" alt="Документ" class="document-image" :class="response.type"  @click="downloadImage(response)" />
+          <img
+            :src="'data:image/jpeg;base64,' + response.image"
+            alt="Документ"
+            class="document-image"
+            :class="response.type"
+            @click="downloadImage(response)"
+          />
         </template>
         <template v-else>
           <p>Изображение не загружено</p>
         </template>
         <button @click="deleteResponse(index)" class="trash">❌</button>
-        
       </div>
     </div>
   </div>
@@ -50,6 +95,7 @@
 <script>
 import Header from "./components/Header.vue";
 import InfoCard from "./components/InfoCard.vue";
+import AdminPanel from "./components/AdminPanel.vue";
 import RegisterSwitch from "./components/RegisterSwitch.vue";
 
 export default {
@@ -57,6 +103,7 @@ export default {
   components: {
     Header,
     InfoCard,
+    AdminPanel,
     RegisterSwitch,
   },
   data() {
@@ -64,6 +111,7 @@ export default {
       responses: [],
       uploadingFiles: [],
       isAuthenticated: false,
+      isRootUser: false,
       passportFields: {
         ФИО: "name",
         Пол: "gender",
@@ -85,20 +133,26 @@ export default {
     };
   },
   methods: {
-        downloadImage(response) {
+    handleLoginSuccess(user) {
+      console.log(user);
+      this.isAuthenticated = true;
+      this.isRootUser = user.user.login == "root";
+    },
+
+    downloadImage(response) {
       const imageData = response.image;
       if (!imageData) {
         alert("Изображение отсутствует");
         return;
       }
 
-      // Создаем временную ссылку для скачивания
       const link = document.createElement("a");
       if (response.type === "driver_license") {
-        link.download = response["driver-license-1"] + response["driver-license-2"] + ".jpg";
+        link.download =
+          response["driver-license-1"] + response["driver-license-2"] + ".jpg";
       }
       if (response.type === "passport") {
-        link.download = response.name + ".jpg"; 
+        link.download = response.name + ".jpg";
       }
       link.href = "data:image/jpeg;base64," + imageData;
 
@@ -128,8 +182,6 @@ export default {
             throw new Error("API URL не задан. Проверьте настройки.");
           }
 
-          console.log("Отправка запроса на URL:", apiUrl);
-
           const response = await fetch(apiUrl, {
             method: "POST",
             headers: {
@@ -153,25 +205,24 @@ export default {
 
       this.addResponses(newResponses);
     },
-addResponses(newResponses) {
-  console.log('Новые ответы:', newResponses);
 
-  this.responses.push(...newResponses);
-  this.uploadingFiles.forEach(file => file.status = "Загружено");
-},
+    addResponses(newResponses) {
+      this.responses = this.responses.concat(newResponses);
+      this.uploadingFiles = [];
+    },
+
     deleteResponse(index) {
       this.responses.splice(index, 1);
     },
-    handleLoginSuccess(user) {
-      this.isAuthenticated = true;
-      this.isRootUser = user.login === 'root';
+    handleLogout() {
+      this.isAuthenticated = false;
+      this.isRootUser = false;
     },
   },
 };
 </script>
 
-
-<style>
+<style >
 * {
   max-width: 1200px;
   margin-left: auto;
@@ -187,7 +238,8 @@ addResponses(newResponses) {
   margin-top: 60px;
   background-color: #ffffff;
 }
-
+</style>
+<style scoped>
 .upload-card {
   margin-top: 10px;
   padding: 20px;
@@ -203,9 +255,11 @@ addResponses(newResponses) {
   text-align: left;
 }
 
-.card {
-  width: 1200px;
+.info-card {
+  border: 1px solid black;
 }
+
+
 
 .response-card {
   display: inline-flex;
@@ -226,8 +280,6 @@ addResponses(newResponses) {
   border-radius: 3px;
   border: 1px solid #000000;
 }
-
-
 
 .upload-wrapper {
   position: relative;
@@ -279,7 +331,7 @@ td {
 .documentValue {
   border: 1px solid black;
   border-radius: 3px;
-  padding: 5px;
+
   color: #000000;
 }
 
@@ -293,10 +345,11 @@ textarea {
 }
 
 textarea {
-  resize: none;
-  overflow: hidden;
-  height: 40px;
+  overflow-y: scroll;
+  margin-bottom: 20px;  
+  height: 50px;
   line-height: 1.5;
+  resize: none;
 }
 
 button {
@@ -309,9 +362,8 @@ button {
 }
 
 button:hover {
-  background-color: #333;
+  background-color: rgb(0, 0, 0);
 }
-
 
 .trash {
   position: relative;
@@ -321,4 +373,7 @@ button:hover {
   background-color: rgba(0, 0, 0, 0);
 }
 
+.trash:hover {
+  background-color: white;
+}
 </style>
