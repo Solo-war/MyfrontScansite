@@ -95,7 +95,7 @@
 <script>
 import Header from "./components/Header.vue";
 import InfoCard from "./components/InfoCard.vue";
-import AdminPanel from "./components/AdminPanel.vue";
+import adminPanel from "./components/adminPanel.vue";
 import RegisterSwitch from "./components/RegisterSwitch.vue";
 
 export default {
